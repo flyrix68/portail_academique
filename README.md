@@ -43,6 +43,38 @@ python app.py
 
 Accéder à http://localhost:5000
 
+## Déploiement
+
+### Heroku
+
+1. Créer un compte Heroku et installer Heroku CLI
+
+2. Initialiser un dépôt Git :
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+```
+
+3. Créer une application Heroku :
+```bash
+heroku create votre-nom-app
+```
+
+4. Déployer :
+```bash
+git push heroku main
+```
+
+### Autres plateformes
+
+Les fichiers `Procfile` et `wsgi.py` sont configurés pour le déploiement sur des plateformes comme Heroku, Railway, ou Render.
+
+Pour un déploiement local en production :
+```bash
+gunicorn wsgi:app
+```
+
 ## Architecture
 
 - `app.py` : Application Flask principale
