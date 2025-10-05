@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portail Académique - Gestion des Étudiants</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Portail Académique - Gestion des Étudiants</h1>
+            <div class="clock-widget">
+                <div class="clock-icon">🕐</div>
+                <div class="clock-time" id="current-time">--:--:--</div>
+                <div class="clock-date" id="current-date">----</div>
+                <button onclick="updateClock()" class="clock-test-btn" title="Actualiser l'horloge">🔄</button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="openTab(this, 'dashboard')">Tableau de Bord</button>
+            <button class="tab-button" onclick="openTab(this, 'books')">Bibliothèque</button>
+            <button class="tab-button" onclick="openTab(this, 'admin')">Administration</button>
+            <button class="tab-button" onclick="openTab(this, 'comparison')">Comparaison ODBC</button>
+            <button class="tab-button" onclick="openTab(this, 'graduation')">Éligibilité Diplôme</button>
+            <button class="tab-button" onclick="openTab(this, 'enrollment')">Vérification d'Inscription</button>
+            <button class="tab-button" onclick="openTab(this, 'details')">Détails Étudiant</button>
+            <button class="tab-button" onclick="openTab(this, 'grades')">Notes</button>
+            <button class="tab-button" onclick="openTab(this, 'search')">Recherche</button>
+            <button class="tab-button" onclick="openTab(this, 'stats')">Statistiques</button>
+            <button class="tab-button" onclick="openTab(this, 'connections')">Test Connexions</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="dashboard" class="tab-content active">
+            <h2>Tableau de Bord Étudiant</h2>
+            <div class="sgbd-indicator">
+                <span class="sgbd-badge oracle">Oracle</span>
+                <span class="sgbd-badge mysql">MySQL</span>
+                <span class="sgbd-badge postgresql">PostgreSQL</span>
+            </div>
+            <p><em>Récupère le profil complet d'un étudiant depuis les trois bases de données</em></p>
+            <div class="form-group">
+                <input type="text" id="dashboard-student-id" placeholder="ID Étudiant">
+                <button onclick="getStudentDashboard()">Voir le Tableau de Bord</button>
+            </div>
+            <div id="dashboard-result"></div>
+        </div>
+
+        <div id="admin" class="tab-content">
+            <h2>Administration - Alimentation des Bases de Données</h2>
+
+            <!-- Sub-tabs for admin -->
+            <div class="sub-tab-navigation">
+                <button class="sub-tab-button active" onclick="openSubTab(this, 'populate')">Alimentation Rapide</button>
+                <button class="sub-tab-button" onclick="openSubTab(this, 'students')">Étudiants</button>
+                <button class="sub-tab-button" onclick="openSubTab(this, 'grades')">Notes</button>
+                <button class="sub-tab-button" onclick="openSubTab(this, 'admin-books')">Livres</button>
+                <button class="sub-tab-button" onclick="openSubTab(this, 'loans')">Emprunts</button>
+                <button class="sub-tab-button" onclick="openSubTab(this, 'all-books')">📚 Catalogue Complet</button>
+                <button class="sub-tab-button" onclick="openSubTab(this, 'all-loans')">📖 Tous les Emprunts</button>
+            </div>
+
+            <!-- Sub-tab content -->
+            <div id="populate" class="sub-tab-content active">
+                <div class="admin-section">
+                    <h3>🚀 Alimentation Rapide (Données de Test)</h3>
+                    <p><em>Cliquez pour insérer automatiquement des données de test dans toutes les bases</em></p>
+                    <div class="sample-data-info">
+                        <div class="data-preview">
+                            <h4>🟠 Oracle - Étudiants</h4>
+                            <ul>
+                                <li>Jean Dupont (jean.dupont@esatic.ci)</li>
+                                <li>Marie Martin (marie.martin@esatic.ci)</li>
+                                <li>Pierre Dubois (pierre.dubois@esatic.ci)</li>
+                            </ul>
+                        </div>
+                        <div class="data-preview">
+                            <h4>🟢 MySQL - Notes</h4>
+                            <ul>
+                                <li>Analyse de Données: 15.5/20</li>
+                                <li>Middleware: 14.0/20</li>
+                                <li>Processus de Markov: 16.5/20</li>
+                            </ul>
+                        </div>
+                        <div class="data-preview">
+                            <h4>🔵 PostgreSQL - Livres</h4>
+                            <ul>
+                                <li>Introduction à l'Informatique</li>
+                                <li>Mathématiques Discrètes</li>
+                                <li>Bases de Données</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button onclick="populateSampleData()" class="admin-btn primary">Alimenter avec Données d'Exemple</button>
+                    <div id="populate-result"></div>
+                </div>
+            </div>
+
+            <div id="students" class="sub-tab-content">
+                <div class="admin-card full-width">
+                    <h3>👤 Ajouter un Étudiant</h3>
+                    <div class="sgbd-indicator">
+                        <span class="sgbd-badge oracle">Oracle</span>
+                    </div>
+                    <form onsubmit="insertStudent(event)">
+                        <div class="form-group">
+                            <input type="number" id="student-id" placeholder="ID Étudiant" required>
+                            <input type="text" id="student-nom" placeholder="Nom" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="student-prenom" placeholder="Prénom" required>
+                            <input type="email" id="student-email" placeholder="Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" id="student-tel" placeholder="Téléphone">
+                            <input type="text" id="student-adresse" placeholder="Adresse">
+                        </div>
+                        <button type="submit" class="admin-btn">Ajouter Étudiant</button>
+                    </form>
+                    <div id="student-insert-result"></div>
+                </div>
+            </div>
+
+            <div id="grades" class="sub-tab-content">
+                <div class="admin-card full-width">
+                    <h3>📊 Ajouter une Note</h3>
+                    <div class="sgbd-indicator">
+                        <span class="sgbd-badge mysql">MySQL</span>
+                    </div>
+                    <form onsubmit="insertGrade(event)">
+                        <div class="form-group">
+                            <input type="number" id="grade-student-id" placeholder="ID Étudiant" required>
+                            <input type="number" id="grade-matiere-id" placeholder="ID Matière" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="number" id="grade-note" placeholder="Note (/20)" step="0.5" min="0" max="20" required>
+                            <input type="date" id="grade-date" required>
+                        </div>
+                        <button type="submit" class="admin-btn">Ajouter Note</button>
+                    </form>
+                    <div id="grade-insert-result"></div>
+                </div>
+            </div>
+
+            <div id="admin-books" class="sub-tab-content">
+                <div class="admin-card full-width">
+                    <h3>📚 Ajouter un Livre</h3>
+                    <div class="sgbd-indicator">
+                        <span class="sgbd-badge postgresql">PostgreSQL</span>
+                    </div>
+                    <form onsubmit="insertBook(event)">
+                        <div class="form-group">
+                            <input type="number" id="book-id" placeholder="ID Livre" required>
+                            <input type="text" id="book-titre" placeholder="Titre" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="book-auteur" placeholder="Auteur" required>
+                            <input type="text" id="book-categorie" placeholder="Catégorie">
+                        </div>
+                        <button type="submit" class="admin-btn">Ajouter Livre</button>
+                    </form>
+                    <div id="book-insert-result"></div>
+                </div>
+            </div>
+
+            <div id="loans" class="sub-tab-content">
+                <div class="admin-card full-width">
+                    <h3>🔄 Créer un Emprunt</h3>
+                    <div class="sgbd-indicator">
+                        <span class="sgbd-badge postgresql">PostgreSQL</span>
+                    </div>
+                    <form onsubmit="createLoan(event)">
+                        <div class="form-group">
+                            <input type="number" id="loan-student-id" placeholder="ID Étudiant" required>
+                            <input type="number" id="loan-book-id" placeholder="ID Livre" required>
+                        </div>
+                        <button type="submit" class="admin-btn">Créer Emprunt</button>
+                    </form>
+                    <div id="loan-create-result"></div>
+                </div>
+            </div>
+
+            <div id="all-books" class="sub-tab-content">
+                <div class="admin-card full-width">
+                    <h3>📚 Catalogue Complet des Livres</h3>
+                    <div class="sgbd-indicator">
+                        <span class="sgbd-badge postgresql">PostgreSQL</span>
+                    </div>
+                    <p><em>Vue d'ensemble de tous les livres enregistrés avec leur statut</em></p>
+                    <button onclick="loadAllBooksAdmin()" class="admin-btn primary">Actualiser le Catalogue</button>
+                    <div id="all-books-admin-list"></div>
+                </div>
+            </div>
+
+            <div id="all-loans" class="sub-tab-content">
+                <div class="admin-card full-width">
+                    <h3>📖 Historique Complet des Emprunts</h3>
+                    <div class="sgbd-indicator">
+                        <span class="sgbd-badge postgresql">PostgreSQL</span>
+                    </div>
+                    <p><em>Historique détaillé de tous les emprunts (actuels et passés)</em></p>
+                    <button onclick="loadAllLoansAdmin()" class="admin-btn primary">Actualiser l'Historique</button>
+                    <div id="all-loans-admin-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="comparison" class="tab-content">
+            <h2>Comparaison : Sans Middleware vs Avec ODBC</h2>
+
+            <div class="comparison-section">
+                <h3>🔴 SANS Middleware (Drivers Directs)</h3>
+                <div class="code-comparison">
+                    <pre><code># 3 DRIVERS DIFFÉRENTS - 3 SYNTAXES
+import cx_Oracle as oracle
+import pymysql as mysql
+import psycopg2 as postgres
+
+# Connexion Oracle
+dsn = oracle.makedsn("localhost", 1521, "XE")
+oracle_conn = oracle.connect("user/pass@dsn")
+
+# Connexion MySQL
+mysql_conn = mysql.connect(host="localhost",
+                          user="root", password="pass")
+
+# Connexion PostgreSQL
+postgres_conn = postgres.connect(host="localhost",
+                               user="postgres", password="pass")
+
+# 3 méthodes différentes pour exécuter des requêtes
+oracle_cursor = oracle_conn.cursor()
+mysql_cursor = mysql_conn.cursor()
+postgres_cursor = postgres_conn.cursor()
+
+# Gestion d'erreurs spécifique à chaque driver
+# Maintenance complexe et coûteuse</code></pre>
+                </div>
+                <div class="disadvantages">
+                    <h4>❌ Inconvénients :</h4>
+                    <ul>
+                        <li>3 drivers différents à installer</li>
+                        <li>3 syntaxes de connexion différentes</li>
+                        <li>3 méthodes d'exécution de requêtes</li>
+                        <li>Gestion d'erreurs spécifique à chaque driver</li>
+                        <li>Maintenance triple</li>
+                        <li>Difficulté d'ajout de nouveaux SGBD</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h3>✅ AVEC ODBC (Middleware)</h3>
+                <div class="code-comparison">
+                    <pre><code># 1 SEUL DRIVER - 1 SEULE SYNTAXE
+import pyodbc
+
+# Connexion unifiée pour tous les SGBD
+oracle_conn = pyodbc.connect('DSN=OracleDSN')
+mysql_conn = pyodbc.connect('DSN=MySQLDSN')
+postgres_conn = pyodbc.connect('DSN=PostgreSQLDSN')
+
+# Méthode identique pour tous les SGBD
+oracle_cursor = oracle_conn.cursor()
+mysql_cursor = mysql_conn.cursor()
+postgres_cursor = postgres_conn.cursor()
+
+# Gestion d'erreurs unifiée
+# Maintenance simplifiée</code></pre>
+                </div>
+                <div class="advantages">
+                    <h4>✅ Avantages :</h4>
+                    <ul>
+                        <li>1 seul driver (pyodbc) pour tous les SGBD</li>
+                        <li>1 seule syntaxe de connexion</li>
+                        <li>1 seule méthode d'exécution</li>
+                        <li>Gestion d'erreurs unifiée</li>
+                        <li>Maintenance simplifiée</li>
+                        <li>Ajout facile de nouveaux SGBD</li>
+                        <li>Interface standardisée</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h3>⚡ Avantages Quantitatifs d'ODBC</h3>
+                <div class="metrics-comparison">
+                    <div class="metric-card">
+                        <h4>Drivers à gérer</h4>
+                        <div class="metric-values">
+                            <span class="without-middleware">3 drivers</span>
+                            <span class="vs">vs</span>
+                            <span class="with-middleware">1 driver</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <h4>Lignes de code</h4>
+                        <div class="metric-values">
+                            <span class="without-middleware">~50 lignes</span>
+                            <span class="vs">vs</span>
+                            <span class="with-middleware">~15 lignes</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <h4>Maintenance</h4>
+                        <div class="metric-values">
+                            <span class="without-middleware">Complexe</span>
+                            <span class="vs">vs</span>
+                            <span class="with-middleware">Simple</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <h4>Évolutivité</h4>
+                        <div class="metric-values">
+                            <span class="without-middleware">Difficile</span>
+                            <span class="vs">vs</span>
+                            <span class="with-middleware">Facile</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h3>🎯 Conclusion : ODBC comme Middleware</h3>
+                <div class="conclusion">
+                    <p><strong>ODBC standardise l'interface de PROGRAMMATION, pas le langage SQL.</strong></p>
+
+                    <div class="key-points">
+                        <div class="point">
+                            <h4>Interface Unifiée</h4>
+                            <p>Une seule API pour accéder à tous les SGBD</p>
+                        </div>
+
+                        <div class="point">
+                            <h4>Adaptation SQL Nécessaire</h4>
+                            <p>Couche d'abstraction requise pour les différences SQL</p>
+                        </div>
+
+                        <div class="point">
+                            <h4>Réduction Complexité</h4>
+                            <p>Simplification majeure du développement et maintenance</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="books" class="tab-content">
+            <h2>Gestion de Bibliothèque</h2>
+
+            <!-- Sub-tabs for books -->
+            <div class="sub-tab-navigation">
+                <button class="sub-tab-button active" onclick="openSubTab(this, 'available-books')">Livres Disponibles</button>
+                <button class="sub-tab-button" onclick="openSubTab(this, 'my-loans')">Mes Emprunts</button>
+                <button class="sub-tab-button" onclick="openSubTab(this, 'borrow-book')">Emprunter</button>
+            </div>
+
+            <!-- Sub-tab content -->
+            <div id="available-books" class="sub-tab-content active">
+                <div class="library-section">
+                    <h3>📚 Livres Disponibles</h3>
+                    <div class="form-group">
+                        <input type="text" id="student-id-books" placeholder="Votre ID Étudiant">
+                        <button onclick="loadAvailableBooks()">Voir les Livres</button>
+                    </div>
+                    <div id="available-books-list"></div>
+                </div>
+            </div>
+
+            <div id="my-loans" class="sub-tab-content">
+                <div class="library-section">
+                    <h3>📖 Mes Emprunts</h3>
+                    <div class="form-group">
+                        <input type="text" id="my-loans-student-id" placeholder="Votre ID Étudiant">
+                        <button onclick="loadMyLoans()">Voir Mes Emprunts</button>
+                    </div>
+                    <div id="my-loans-list"></div>
+                </div>
+            </div>
+
+            <div id="borrow-book" class="sub-tab-content">
+                <div class="library-section">
+                    <h3>🔄 Emprunter un Livre</h3>
+                    <div class="form-group">
+                        <input type="text" id="borrow-student-id" placeholder="Votre ID Étudiant">
+                        <input type="text" id="borrow-book-id" placeholder="ID du Livre">
+                        <button onclick="borrowBookDirect()">Emprunter</button>
+                    </div>
+                    <div id="borrow-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="graduation" class="tab-content">
+            <h2>Éligibilité à l'Obtention du Diplôme</h2>
+            <div class="sgbd-indicator">
+                <span class="sgbd-badge oracle">Oracle</span>
+                <span class="sgbd-badge mysql">MySQL</span>
+                <span class="sgbd-badge postgresql">PostgreSQL</span>
+            </div>
+            <p><em>Vérifie tous les critères d'éligibilité depuis les trois systèmes</em></p>
+            <div class="form-group">
+                <input type="text" id="graduation-student-id" placeholder="ID Étudiant">
+                <button onclick="checkGraduationEligibility()">Vérifier Éligibilité</button>
+            </div>
+            <div id="graduation-result"></div>
+        </div>
+
+        <div id="enrollment" class="tab-content">
+            <h2>Vérifier l'Inscription d'un Étudiant</h2>
+            <div class="sgbd-indicator">
+                <span class="sgbd-badge oracle">Oracle</span>
+            </div>
+
+            <div class="approach-comparison">
+                <div class="approach-card">
+                    <h3>🔵 Avec ODBC</h3>
+                    <div class="form-group">
+                        <input type="text" id="student-id-enrollment-odbc" placeholder="ID Étudiant">
+                        <button onclick="checkEnrollmentODBC()">Vérifier (ODBC)</button>
+                    </div>
+                    <div id="enrollment-odbc-result"></div>
+                </div>
+
+                <div class="approach-card">
+                    <h3>🔴 Sans Middleware</h3>
+                    <div class="form-group">
+                        <input type="text" id="student-id-enrollment-direct" placeholder="ID Étudiant">
+                        <button onclick="checkEnrollmentDirect()">Vérifier (Direct)</button>
+                    </div>
+                    <div id="enrollment-direct-result"></div>
+                </div>
+            </div>
+
+            <div id="enrollment-comparison-result"></div>
+        </div>
+
+        <div id="details" class="tab-content">
+            <h2>Détails Complets d'un Étudiant</h2>
+            <div class="sgbd-indicator">
+                <span class="sgbd-badge oracle">Oracle</span>
+            </div>
+            <div class="form-group">
+                <input type="text" id="student-id-details" placeholder="ID Étudiant">
+                <button onclick="getStudentDetails()">Consulter</button>
+            </div>
+            <div id="details-result"></div>
+        </div>
+
+        <div id="grades" class="tab-content">
+            <h2>Notes d'un Étudiant</h2>
+            <div class="sgbd-indicator">
+                <span class="sgbd-badge mysql">MySQL</span>
+            </div>
+            <div class="form-group">
+                <input type="text" id="student-id-grades" placeholder="ID Étudiant">
+                <button onclick="getStudentGrades()">Voir les Notes</button>
+            </div>
+            <div id="grades-result"></div>
+        </div>
+
+        <div id="search" class="tab-content">
+            <h2>Rechercher un Étudiant par Nom</h2>
+            <div class="sgbd-indicator">
+                <span class="sgbd-badge oracle">Oracle</span>
+            </div>
+            <div class="form-group">
+                <input type="text" id="student-name-search" placeholder="Nom de l'étudiant">
+                <button onclick="searchStudents()">Rechercher</button>
+            </div>
+            <div id="search-result"></div>
+        </div>
+
+        <div id="stats" class="tab-content">
+            <h2>Statistiques d'Inscription</h2>
+            <div class="sgbd-indicator">
+                <span class="sgbd-badge oracle">Oracle</span>
+                <span class="sgbd-badge mysql">MySQL</span>
+                <span class="sgbd-badge postgresql">PostgreSQL</span>
+            </div>
+            <p><em>Sélectionnez le système de base de données à consulter</em></p>
+            <div class="db-buttons">
+                <button onclick="getEnrollmentStats('oracle')">Oracle</button>
+                <button onclick="getEnrollmentStats('mysql')">MySQL</button>
+                <button onclick="getEnrollmentStats('postgresql')">PostgreSQL</button>
+            </div>
+            <div id="stats-result"></div>
+        </div>
+
+        <div id="connections" class="tab-content">
+            <h2>Test des Connexions aux Bases de Données</h2>
+            <div class="sgbd-indicator">
+                <span class="sgbd-badge oracle">Oracle</span>
+                <span class="sgbd-badge mysql">MySQL</span>
+                <span class="sgbd-badge postgresql">PostgreSQL</span>
+            </div>
+            <div class="db-buttons">
+                <button onclick="testConnection('oracle')">Tester Oracle</button>
+                <button onclick="testConnection('mysql')">Tester MySQL</button>
+                <button onclick="testConnection('postgresql')">Tester PostgreSQL</button>
+            </div>
+            <div id="connection-result"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
